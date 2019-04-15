@@ -1,0 +1,283 @@
+---
+title: "Classification of Small Areas, Ireland"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(rgdal)
+library(GISTools)
+library(leaflet)
+library(leaflet.extras)
+
+clus.spdf <- readShapePoly("G:\\Projects\\02_Spatial\\02_Projects\\02_ERNIE_2016_Census\\02_Data\\Shapefiles\\clus_spdf.shp")
+# Not Projected
+newProj <- CRS("+init=epsg:4326")
+proj4string(clus.spdf) <- newProj
+
+group_1 <- clus.spdf[clus.spdf$PAMcluster == 1, ]
+group_2 <- clus.spdf[clus.spdf$PAMcluster == 2, ]
+group_3 <- clus.spdf[clus.spdf$PAMcluster == 3, ]
+group_4 <- clus.spdf[clus.spdf$PAMcluster == 4, ]
+group_5 <- clus.spdf[clus.spdf$PAMcluster == 5, ]
+group_6 <- clus.spdf[clus.spdf$PAMcluster == 6, ]
+group_7 <- clus.spdf[clus.spdf$PAMcluster == 7, ]
+group_8 <- clus.spdf[clus.spdf$PAMcluster == 8, ]
+group_9 <- clus.spdf[clus.spdf$PAMcluster == 9, ]
+group_10 <- clus.spdf[clus.spdf$PAMcluster == 10, ]
+group_11 <- clus.spdf[clus.spdf$PAMcluster == 11, ]
+group_12 <- clus.spdf[clus.spdf$PAMcluster == 12, ]
+group_13 <- clus.spdf[clus.spdf$PAMcluster == 13, ]
+group_14 <- clus.spdf[clus.spdf$PAMcluster == 14, ]
+group_15 <- clus.spdf[clus.spdf$PAMcluster == 15, ]
+group_16 <- clus.spdf[clus.spdf$PAMcluster == 16, ]
+group_17 <- clus.spdf[clus.spdf$PAMcluster == 17, ]
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Classification of Small Areas, Ireland
+
+```{r echo=FALSE}
+leaflet() %>% 
+  
+  addProviderTiles("CartoDB.Positron") %>% 
+  
+  addFullscreenControl() %>%
+  
+# Group 1
+  addPolygons(
+    data = group_1, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#08519c",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 1"
+    ) %>%
+
+    
+# Group 2
+  addPolygons(
+    data = group_2, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#cab2d6",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 2"
+    ) %>%  
+    
+ # Group 3
+  addPolygons(
+    data = group_3, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#ff7f00",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 3"
+    ) %>% 
+
+
+# Group 4
+  addPolygons(
+    data = group_4, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#33a02c",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 4"
+    ) %>% 
+
+# Group 5
+  addPolygons(
+    data = group_5, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#ffff33",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 5"
+    ) %>% 
+
+# Group 6
+  addPolygons(
+    data = group_6, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#f781bf",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 6"
+    ) %>% 
+
+# Group 7
+  addPolygons(
+    data = group_7, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#f781bf",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 7"
+    ) %>% 
+
+# Group 8
+  addPolygons(
+    data = group_8, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#a65628",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 8"
+    ) %>% 
+    
+# Group 9
+  addPolygons(
+    data = group_9, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#8dd3c7",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 9"
+    ) %>% 
+
+# Group 10
+  addPolygons(
+    data = group_10, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 10"
+    ) %>%   
+
+# Group 11
+  addPolygons(
+    data = group_11, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 11"
+    ) %>%       
+ 
+# Group 12
+  addPolygons(
+    data = group_12, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 12"
+    ) %>%       
+ 
+# Group 13
+  addPolygons(
+    data = group_13, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 13"
+    ) %>%       
+ 
+# Group 14
+  addPolygons(
+    data = group_14, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 14"
+    ) %>%       
+ 
+# Group 15
+  addPolygons(
+    data = group_15, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 15"
+    ) %>%       
+ 
+# Group 16
+  addPolygons(
+    data = group_16, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 16"
+    ) %>%       
+ 
+# Group 17
+  addPolygons(
+    data = group_17, 
+    color = "#444444", 
+    weight = 1, 
+    smoothFactor = 0.5,
+    opacity = 1.0, 
+    fillOpacity = 0.5,
+    fillColor = "#fdb462",
+    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
+    group = "Group 17"
+    ) %>%   
+  
+	addLayersControl(
+		baseGroups = c("Group 1", "Group 2", "Group 3", "Group 4", "Group 5", "Group 6", "Group 7", "Group 8", "Group 9", "Group 10", "Group 11", "Group 12", "Group 13", "Group 14", "Group 15", "Group 16", "Group 17"),
+        options = layersControlOptions(collapsed = TRUE))
+
+
+```
+
+
