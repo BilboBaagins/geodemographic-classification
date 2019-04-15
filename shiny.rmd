@@ -1,283 +1,265 @@
 ---
-title: "Classification of Small Areas, Ireland"
-output: 
+title: "A Classification of Small Areas, Ireland"
+resource_files:
+- clus_spdf.shx
+- clus_spdf.dbf
+- clus_spdf.prj
+- clus_spdf.shp.xml
+runtime: shiny
+output:
   flexdashboard::flex_dashboard:
-    orientation: columns
+    orientation: rows
+    social: menu
+    theme: simplex
     vertical_layout: fill
-    self_contained: false
 ---
 
 ```{r setup, include=FALSE}
-library(flexdashboard)
-library(rgdal)
-library(GISTools)
-library(leaflet)
+
+library(shiny)
+library(leaflet) # devtools::install_github('rstudio/leaflet')
 library(leaflet.extras)
+library(highcharter) # devtools::install_github('jbkunst/highcharter')
+library(plotly) # devtools::install_github('ropensci/plotly')
+library(ggplot2) # devtools::install_github('hadley/ggplot2')
+library(sp)
+library(flexdashboard) # devtools::install_github('rstudio/flexdashboard')
+library(rgeos)
+library(mapproj)
+library(maptools)
+library(readr)
+library(ggthemes)
+library(GISTools)
 
-clus.spdf <- readShapePoly("G:\\Projects\\02_Spatial\\02_Projects\\02_ERNIE_2016_Census\\02_Data\\Shapefiles\\clus_spdf.shp")
-# Not Projected
-newProj <- CRS("+init=epsg:4326")
-proj4string(clus.spdf) <- newProj
+specify_decimal <- function(x, k) trimws(format(round(x, k), nsmall=k))
 
-group_1 <- clus.spdf[clus.spdf$PAMcluster == 1, ]
-group_2 <- clus.spdf[clus.spdf$PAMcluster == 2, ]
-group_3 <- clus.spdf[clus.spdf$PAMcluster == 3, ]
-group_4 <- clus.spdf[clus.spdf$PAMcluster == 4, ]
-group_5 <- clus.spdf[clus.spdf$PAMcluster == 5, ]
-group_6 <- clus.spdf[clus.spdf$PAMcluster == 6, ]
-group_7 <- clus.spdf[clus.spdf$PAMcluster == 7, ]
-group_8 <- clus.spdf[clus.spdf$PAMcluster == 8, ]
-group_9 <- clus.spdf[clus.spdf$PAMcluster == 9, ]
-group_10 <- clus.spdf[clus.spdf$PAMcluster == 10, ]
-group_11 <- clus.spdf[clus.spdf$PAMcluster == 11, ]
-group_12 <- clus.spdf[clus.spdf$PAMcluster == 12, ]
-group_13 <- clus.spdf[clus.spdf$PAMcluster == 13, ]
-group_14 <- clus.spdf[clus.spdf$PAMcluster == 14, ]
-group_15 <- clus.spdf[clus.spdf$PAMcluster == 15, ]
-group_16 <- clus.spdf[clus.spdf$PAMcluster == 16, ]
-group_17 <- clus.spdf[clus.spdf$PAMcluster == 17, ]
+# DEFINE LIST OF AVAILABLE VARIABLES
+{
+
+lookup <- structure(c(6L, 1L, 4L, 2L, 7L, 10L, 16L, 
+8L, 5L, 13L, 3L, 9L, 12L, 17L, 11L, 15L, 14L), .Names = c("A6. Remote Rural Agiricultural Communities", "A1. Rural Agricultural Communities", "A4. Affluent Rural Communities", "A2. Mature Rural Communities", "B7. Retired, Mature Suburban Families", "C10. Comfortable Commuting Workforce", "C16. Affluent Suburbs", "D8. Struggling Ageing Communities", "D5. Hard-Pressed Working-Class Households", "D13. Struggling Families, Social Housing", "E3. Comfortable, Young Suburban Families", "E9. Better-Off Suburban Families", "E12. Young Families, Migrant Workforce", "E17. Starting Out - Educated, Multicultural Worforce", "F11. Students, University Communities", "G15. Stretched Inner City Singles", "G14. Better-Off Multicultural Inner City"))
+
+}
+
+# Small Area Clusters
+#clus.spdf <- readShapePoly("G:/Projects/02_Spatial/02_Projects/02_ERNIE_2016_Census/02_Data/Shapefiles/clus_spdf.shp")
+clus.spdf <- readShapePoly("clus_spdf.shp")
+
+# Re-format the socio-demographic variables to round percent 
+clus.spdf$LoneParent <- as.numeric(specify_decimal(clus.spdf$LoneParent, 0))
+clus.spdf$RentPublic <- as.numeric(specify_decimal(clus.spdf$RentPublic, 0))
+clus.spdf$RentPrivat <- as.numeric(specify_decimal(clus.spdf$RentPrivat, 0))
+clus.spdf$HEQual     <- as.numeric(specify_decimal(clus.spdf$HEQual, 0))
+clus.spdf$TwoCars    <- as.numeric(specify_decimal(clus.spdf$TwoCars, 0))
+clus.spdf$Unemployed <- as.numeric(specify_decimal(clus.spdf$Unemployed, 0))
+
+
+co <- reactive({
+  
+  m <- clus.spdf[clus.spdf$PAMcluster == input$cluster_group, ]
+  
+  m$Score <- m$T1_1AGETT
+  
+  return(m)
+  
+})
+
 ```
 
-Column {data-width=650}
------------------------------------------------------------------------
+Sidebar {.sidebar}
+======================================================================
 
-### Classification of Small Areas, Ireland
+```{r}
+# Define inputs
+selectInput('cluster_group', label = 'Select a Cluster Group', choices = lookup, selected = 2L)
 
-```{r echo=FALSE}
-leaflet() %>% 
+# Set up data download
+data_for_dl <- reactive({
   
-  addProviderTiles("CartoDB.Positron") %>% 
+  dat <- select(co()@data, OBJECTID, SMALL_AREA, EDNAME, COUNTYNAME, LoneParent, RentPublic, RentPrivat, HEQual, TwoCars, Unemployed)
   
-  addFullscreenControl() %>%
-  
-# Group 1
-  addPolygons(
-    data = group_1, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#08519c",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 1"
-    ) %>%
-
-    
-# Group 2
-  addPolygons(
-    data = group_2, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#cab2d6",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 2"
-    ) %>%  
-    
- # Group 3
-  addPolygons(
-    data = group_3, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#ff7f00",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 3"
-    ) %>% 
-
-
-# Group 4
-  addPolygons(
-    data = group_4, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#33a02c",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 4"
-    ) %>% 
-
-# Group 5
-  addPolygons(
-    data = group_5, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#ffff33",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 5"
-    ) %>% 
-
-# Group 6
-  addPolygons(
-    data = group_6, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#f781bf",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 6"
-    ) %>% 
-
-# Group 7
-  addPolygons(
-    data = group_7, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#f781bf",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 7"
-    ) %>% 
-
-# Group 8
-  addPolygons(
-    data = group_8, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#a65628",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 8"
-    ) %>% 
-    
-# Group 9
-  addPolygons(
-    data = group_9, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#8dd3c7",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 9"
-    ) %>% 
-
-# Group 10
-  addPolygons(
-    data = group_10, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 10"
-    ) %>%   
-
-# Group 11
-  addPolygons(
-    data = group_11, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 11"
-    ) %>%       
- 
-# Group 12
-  addPolygons(
-    data = group_12, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 12"
-    ) %>%       
- 
-# Group 13
-  addPolygons(
-    data = group_13, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 13"
-    ) %>%       
- 
-# Group 14
-  addPolygons(
-    data = group_14, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 14"
-    ) %>%       
- 
-# Group 15
-  addPolygons(
-    data = group_15, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 15"
-    ) %>%       
- 
-# Group 16
-  addPolygons(
-    data = group_16, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 16"
-    ) %>%       
- 
-# Group 17
-  addPolygons(
-    data = group_17, 
-    color = "#444444", 
-    weight = 1, 
-    smoothFactor = 0.5,
-    opacity = 1.0, 
-    fillOpacity = 0.5,
-    fillColor = "#fdb462",
-    highlightOptions = highlightOptions(color = "white", weight = 1, bringToFront = TRUE),
-    group = "Group 17"
-    ) %>%   
-  
-	addLayersControl(
-		baseGroups = c("Group 1", "Group 2", "Group 3", "Group 4", "Group 5", "Group 6", "Group 7", "Group 8", "Group 9", "Group 10", "Group 11", "Group 12", "Group 13", "Group 14", "Group 15", "Group 16", "Group 17"),
-        options = layersControlOptions(collapsed = TRUE))
+})
 
 
 ```
 
+Choose one of the 17 clusters (from the drop down menu) describing socio-demographic life in Ireland according to the 2016 Irish Census. Each Small Area is coloured based on population counts. Click on an area to investigate its underlying socio-demographic attributes.   
+
+**Glossary:**  
+A) Rural Communities  
+B) Mature Suburbs  
+C) Commuterland  
+D) Struggling Communities  
+E) Young Suburban Families  
+F) University Communities  
+G) Inner City  
+
+**Heatmap**  
+The heatmap tab provides a visual of derived Census 2016 variables that inform each of the 17 clusters.  
+It should give an indication of the dominant variables defining each cluster.  
+Note:  
+ - Dark brown denotes a low proportion of the corresponding variable in the cluster  
+ - Dark green denites a high proportion of the corresponding variable in the cluster  
+
+Application author: [Billy Archbold](https://rpubs.com/Billy_Archbold)
+Adapted [version](https://walkerke.shinyapps.io/neighborhood_diversity/) by: [Kyle Walker](http://personal.tcu.edu/kylewalker), [Texas Christian University](http://www.tcu.edu)
+
+
+Explore Counties
+======================================================================
+
+### Map of County Areas
+
+```{r}
+
+# Draw the map without selected tracts
+output$map <- renderLeaflet({
+  
+    pal <- colorNumeric(c('Reds'), NULL)
+    
+    map <- leaflet(co()) %>%
+      
+      addBootstrapDependency() %>% 
+      
+      addProviderTiles('CartoDB.Positron') %>%
+      
+        addEasyButton(easyButton(
+        icon="fa-globe", title="Reset View",
+        onClick=JS("function(btn, map){map.setView([53.43, -7.78], 7);}"))) %>%
+        
+        addEasyButton(easyButton(
+        icon="fa-location-arrow", title="Dublin",
+        onClick=JS("function(btn, map){map.setView([53.34, -6.27], 10);}"))) %>%
+        
+        addEasyButton(easyButton(
+        icon="fa-location-arrow", title="Galway",
+        onClick=JS("function(btn, map){map.setView([53.27, -9.04], 10);}"))) %>%
+
+        addEasyButton(easyButton(
+        icon="fa-location-arrow", title="Maynooth",
+        onClick=JS("function(btn, map){map.setView([53.3915, -6.5810], 12);}"))) %>%
+      
+      clearShapes() %>%
+      addPolygons(stroke = FALSE, smoothFactor = 0, 
+                  fillColor = ~pal(T1_1AGETT), fillOpacity = 0.7, 
+                  layerId = ~OBJECTID, label=paste0('Name: ', co()$EDNAME, ', Population: ', co()$T1_1AGETT)) %>%
+      addLegend(position = 'bottomright', pal = pal, 
+                values = co()$T1_1AGETT, title = 'Population Count')
+    
+    map
+    
+  })
+
+# Click event for the map (will use to generate chart)
+click_tract <- eventReactive(input$map_shape_click, {
+
+    x <- input$map_shape_click
+
+    y <- x$id
+
+    return(y)
+
+  })
+
+
+
+observe({
+  
+  req(click_tract()) # do this if click_tract() is not null
+  
+  # Add the clicked tract to the map in aqua, and remove when a new one is clicked
+  map <- leafletProxy('map') %>%
+      removeShape('htract') %>%
+      addPolygons(data = clus.spdf[clus.spdf$OBJECTID == click_tract(), ], fill = FALSE, color = '#00FFFF', opacity = 1, layerId = 'htract')
+
+  })
+
+
+
+tract_data <- reactive({
+  
+    # Fetch data for the clicked tract
+    return(co()@data[co()@data$OBJECTID == click_tract(), ])
+
+  })
+
+
+leafletOutput('map')  
+
+
+```
+
+### Area (click on the map to show chart)
+
+```{r}
+
+
+
+output$raceplot <- renderHighchart({
+
+    chart <- highchart() %>%
+      hc_chart(type = 'column') %>%
+      hc_legend(enabled = FALSE) %>%
+      hc_xAxis(categories = c('Lone Parent', 'Local Authority Rent', 'Private Rent', '3rd Level Education', 'Two Cars', 'Unemployment'), title = list(text = 'Socio-Demographic Variables')) %>%
+      hc_yAxis(title = list(text = 'Percentage')) %>%
+      hc_plotOptions(series = list(dataLabels = list(enabled = TRUE))) %>%
+      hc_add_series(name = 'Census, 2016', data = c(tract_data()$LoneParent, tract_data()$RentPublic, tract_data()$RentPrivat, tract_data()$HEQual, tract_data()$TwoCars, tract_data()$Unemployed)) %>%
+      hc_title(text = paste0('Small Area ', as.character(tract_data()$SMALL_AREA), 
+                             ', ', tract_data()$EDNAME, ', ', tract_data()$COUNTYNAME), 
+               align = 'left') %>%
+      hc_subtitle(text = paste0('Population: ', as.character(round(tract_data()$T1_1AGETT, 2))), 
+                  align = 'left') %>%
+      hc_add_theme(hc_theme_smpl()) %>%
+      hc_colors(c('#d01010', '#d01010')) %>%
+      hc_tooltip(enabled = TRUE)
+
+
+
+    chart
+
+  })
+
+highchartOutput('raceplot')
+```
+
+About
+============================================================================
+
+This application is based on analysis that was carried out on the Small Area Population Statistics (SAPS) for Census 2016 to classify each Small Area in Ireland into one of 17 typologies based on underlying social and economic characteristics. This is a [reproduction of a geo-demographic classification](https://rpubs.com/chrisbrunsdon/14998) created by the [National Centre for Geocomputation (NCG)](https://www.maynoothuniversity.ie/national-centre-geocomputation-ncg) in Maynooth University using data from Census 2011.
+
+The study utilises the 800+ socio-demographic variables released at Small Area level after the 2016 Irish Census.  
+40 variables were derived from the inital raw data to be used in the classification exercise.  
+Further data reduction (Principal Component Analysis) was carried out on the 40 derived variables.  
+Finally, a Partitioning Around Medoids (PAM) clustering algorithm was applied to the component variables to define the Small Area clusters.  
+
+
+Heatmap 
+============================================================================
+
+<img src="Heatmap.png" height="42" width="42">
+
+
+<style>
+
+#sidebar.section.sidebar {
+
+  background-color: white; 
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+
+}
+
+.js-irs-0 .irs-bar {
+border-top-color: #d01010;
+border-bottom-color: #d01010;
+} 
+
+.js-irs-0 .irs-bar-edge {
+border-color: #d01010;
+}
+
+.js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
+background: #a00;
+}
+
+</style>
 
